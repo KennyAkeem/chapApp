@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App with Rooms</title>
+  
+  <script>
+  if (localStorage.getItem("theme") === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+</script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1f2937, #111827);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: background 0.3s;
+    }
+    /* dark mode */
+    
+    html.dark {
+  background: #18191a;
+}
+
+html.dark .chat-container {
+  background: #242526;
+  color: white;
+}
+
+html.dark .chat-header {
+  background: #333;
+}
+
+html.dark .chat-input {
+  border-top: 1px solid #444;
+}
+
+html.dark .bot {
+  background: #3a3b3c;
+  color: white;
+}
+
+/* timestamps + status in dark mode */
+body.dark .timestamp,
+body.dark .status {
+  color: #999;
+}
+
+    .chat-container {
+      width: 100%;
+      max-width: 420px;
+      height: 90vh;
+      max-height: 650px;
+      background: #1e1e2f;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #2563eb;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px;
+      font-weight: bold;
+    }
+
+    .header-actions button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+
+    .chat-box {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scrollbar-width: thin;
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .user {
+      background: #2563eb;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot {
+      background: #374151;
+      color: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .timestamp {
+      font-size: 10px;
+      color: #9ca3af;
+      margin-top: 2px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status { font-size: 12px; }
+    .sent { color: #9ca3af; }
+    .delivered { color: #3b82f6; }
+
+    .chat-input {
+      display: flex;
+      padding: 12px;
+      background: #111827;
+      border-top: 1px solid #1f2937;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #374151;
+      color: white;
+    }
+
+    .chat-input button {
+      margin-left: 10px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Username + Room modal */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal {
+      background: #242526;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      color: white;
+      width: 300px;
+    }
+
+    .modal input, .modal select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+    }
+
+    .modal button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      margin-top: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    #theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: #0078ff;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#theme-toggle:hover {
+  background: #005ecb;
+  transform: rotate(20deg) scale(1.05);
+}
+
+body.dark #theme-toggle {
+  background: #444;
+  color: #ffd700;
+}
+    
+    /* theme toggle button */
+#theme-toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #0078ff;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* hover effect */
+#theme-toggle:hover {
+  background: #005ecb;
+  transform: rotate(20deg);
+}
+
+/* dark mode style for button */
+body .dark #theme-toggle {
+  background: #444;
+  color: #ffd700; /* golden sun color */
+}
+/* remove theme toggle from header styling */
+.chat-header #theme-toggle {
+  display: none;
+}
+
+/* floating theme toggle button */
+#theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: #0078ff;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* hover effect */
+#theme-toggle:hover {
+  background: #005ecb;
+  transform: rotate(20deg) scale(1.05);
+}
+
+/* dark mode style */
+body.dark #theme-toggle {
+  background: #444;
+  color: #ffd700; /* golden sun color */
+}
+
+
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <span id="room-name">💬 My Chat App</span>
+      <div class="header-actions">
+
+        <button id="clear-chat">🗑️</button>
+      </div>
+    </div>
+    
+    <div class="chat-box" id="chat-box"></div>
+    
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Type a message...">
+      <button id="send-btn">Send</button>
+    </div>
+  </div>
+  
+          <button id="theme-toggle">🌙</button>
+
+  <!-- Username + Room Selector -->
+  <div class="overlay" id="setup-overlay">
+    <div class="modal">
+      <h2>Join Chat</h2>
+      <input type="text" id="username-input" placeholder="Enter your username">
+      <select id="room-select">
+        <option value="general">General Room</option>
+        <option value="tech">Tech Talk</option>
+        <option value="random">Random Chat</option>
+      </select>
+      <button id="join-btn">Join</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+    const sendBtn = document.getElementById("send-btn");
+    const themeToggle = document.getElementById("theme-toggle");
+    const clearBtn = document.getElementById("clear-chat");
+    const roomNameEl = document.getElementById("room-name");
+
+    const overlay = document.getElementById("setup-overlay");
+    const usernameInput = document.getElementById("username-input");
+    const roomSelect = document.getElementById("room-select");
+    const joinBtn = document.getElementById("join-btn");
+
+    let username = "";
+    let currentRoom = "general";
+    let savedChats = JSON.parse(localStorage.getItem("chats")) || {};
+
+    // Helper: formatted time
+    function formatTime() {
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function addMessage(text, sender, time = null, save = true, status = "sent") {
+      const messageEl = document.createElement("div");
+      messageEl.classList.add("message", sender);
+
+      const timestamp = time || formatTime();
+      let statusIcon = sender === "user" 
+        ? `<span class="status ${status}">${status === "delivered" ? "✓✓" : "✓"}</span>` 
+        : "";
+
+      messageEl.innerHTML = `
+        <div><b>${sender === "user" ? username : "KenAi"}:</b> ${text}</div>
+        <div class="timestamp">${timestamp} ${statusIcon}</div>
+      `;
+
+      chatBox.appendChild(messageEl);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      if (save) {
+        if (!savedChats[currentRoom]) savedChats[currentRoom] = [];
+        savedChats[currentRoom].push({ text, sender, time: timestamp, status });
+        localStorage.setItem("chats", JSON.stringify(savedChats));
+      }
+    }
+
+    function botReply(userMsg) {
+      const responses = {
+        hi: ["Hello 👋", "Hey, how’s it going?", "Hi there! 😃"],
+        hello: ["Hey!", "Hello friend!", "What's up?"],
+        bye: ["Goodbye 👋", "See you later!", "Take care!"],
+        who: ["I was created by Kenny Akeem", "KenTech group!", "I've responded to this before...Ken!!!"],
+        
+        
+        far: ["I dey sharp, how your side na", "Ken still dey teach me pidgin, I never learn finish!", "sharp, I dey active, wetin dey sup?"],
+        
+        how: ["I'm doing great, thanks!", "All good here 🤖", "Trying to be a smart bot 😅"],
+        default: ["Interesting... 🤔", "Tell me more!", "I'm just a simple bot 🤖", "Hmm... okay!"]
+      };
+
+      let key = Object.keys(responses).find(k => userMsg.toLowerCase().includes(k));
+      let possibleReplies = responses[key] || responses.default;
+      return possibleReplies[Math.floor(Math.random() * possibleReplies.length)];
+    }
+
+    sendBtn.addEventListener("click", () => {
+      const msg = userInput.value.trim();
+      if (msg === "") return;
+
+      addMessage(msg, "user", null, true, "sent");
+      userInput.value = "";
+
+      setTimeout(() => {
+        addMessage("Typing...", "bot", null, false);
+        setTimeout(() => {
+          chatBox.lastChild.remove();
+          addMessage(botReply(msg), "bot");
+
+          // Update last user msg status to delivered
+          let lastUserMsg = [...chatBox.querySelectorAll(".message.user")].pop();
+          if (lastUserMsg) {
+            let ts = lastUserMsg.querySelector(".timestamp");
+            ts.innerHTML = ts.innerHTML.replace("✓", "✓✓");
+            ts.querySelector(".status").classList.remove("sent");
+            ts.querySelector(".status").classList.add("delivered");
+
+            let last = savedChats[currentRoom].filter(c => c.sender === "user").pop();
+            if (last) last.status = "delivered";
+            localStorage.setItem("chats", JSON.stringify(savedChats));
+          }
+        }, 1000);
+      }, 500);
+    });
+
+    userInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") sendBtn.click();
+    });
+
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      themeToggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    });
+
+    clearBtn.addEventListener("click", () => {
+      chatBox.innerHTML = "";
+      if (savedChats[currentRoom]) savedChats[currentRoom] = [];
+      localStorage.setItem("chats", JSON.stringify(savedChats));
+    });
+
+    // Username + Room join
+    joinBtn.addEventListener("click", () => {
+      username = usernameInput.value.trim();
+      currentRoom = roomSelect.value;
+      if (!username) {
+        alert("Please enter a username");
+        return;
+      }
+
+      roomNameEl.textContent = `💬 ${currentRoom} (${username})`;
+      overlay.style.display = "none";
+
+      // Load chat history for this room
+      chatBox.innerHTML = "";
+      if (savedChats[currentRoom]) {
+        savedChats[currentRoom].forEach(chat => {
+          addMessage(chat.text, chat.sender, chat.time, false, chat.status);
+        });
+      } else {
+        savedChats[currentRoom] = [];
+      }
+    });
+
+    // Load saved theme
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark");
+      themeToggle.textContent = "☀️";
+    }
+    
+    
+    // ✅ Theme toggle
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  
+  // Fade animation for icon
+  themeToggle.style.opacity = 0;
+  setTimeout(() => {
+    if (document.body.classList.contains("dark")) {
+      themeToggle.textContent = "☀️";
+      localStorage.setItem("theme", "dark");
+    } else {
+      themeToggle.textContent = "🌙";
+      localStorage.setItem("theme", "light");
+    }
+    themeToggle.style.opacity = 1;
+  }, 200);
+});
+
+
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  if (document.body.classList.contains("dark")) {
+    themeToggle.textContent = "☀️";
+    localStorage.setItem("theme", "dark");
+  } else {
+    themeToggle.textContent = "🌙";
+    localStorage.setItem("theme", "light");
+  }
+});
+
+
+themeToggle.addEventListener("click", () => {
+  document.documentElement.classList.toggle("dark");
+  if (document.documentElement.classList.contains("dark")) {
+    themeToggle.textContent = "☀️";
+    localStorage.setItem("theme", "dark");
+  } else {
+    themeToggle.textContent = "🌙";
+    localStorage.setItem("theme", "light");
+  }
+});
+  </script>
+</body>
+</html>
