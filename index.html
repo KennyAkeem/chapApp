@@ -316,7 +316,7 @@ body.dark #theme-toggle {
     </div>
   </div>
   
-        <!--  <button id="theme-toggle">🌙</button>-->
+      
 
   <!-- Username + Room Selector -->
   <div class="overlay" id="setup-overlay">
@@ -336,7 +336,7 @@ body.dark #theme-toggle {
     const chatBox = document.getElementById("chat-box");
     const userInput = document.getElementById("user-input");
     const sendBtn = document.getElementById("send-btn");
-    const themeToggle = document.getElementById("theme-toggle");
+    
     const clearBtn = document.getElementById("clear-chat");
     const roomNameEl = document.getElementById("room-name");
 
@@ -431,11 +431,7 @@ body.dark #theme-toggle {
       if (e.key === "Enter") sendBtn.click();
     });
 
-    themeToggle.addEventListener("click", () => {
-      document.body.classList.toggle("dark");
-      themeToggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
-      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
-    });
+    
 
     clearBtn.addEventListener("click", () => {
       chatBox.innerHTML = "";
@@ -467,53 +463,9 @@ body.dark #theme-toggle {
     });
 
     // Load saved theme
-    if (localStorage.getItem("theme") === "dark") {
-      document.body.classList.add("dark");
-      themeToggle.textContent = "☀️";
-    }
     
-    
-    // ✅ Theme toggle
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
   
-  // Fade animation for icon
-  themeToggle.style.opacity = 0;
-  setTimeout(() => {
-    if (document.body.classList.contains("dark")) {
-      themeToggle.textContent = "☀️";
-      localStorage.setItem("theme", "dark");
-    } else {
-      themeToggle.textContent = "🌙";
-      localStorage.setItem("theme", "light");
-    }
-    themeToggle.style.opacity = 1;
-  }, 200);
-});
-
-
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-  if (document.body.classList.contains("dark")) {
-    themeToggle.textContent = "☀️";
-    localStorage.setItem("theme", "dark");
-  } else {
-    themeToggle.textContent = "🌙";
-    localStorage.setItem("theme", "light");
-  }
-});
-
-
-themeToggle.addEventListener("click", () => {
-  document.documentElement.classList.toggle("dark");
-  if (document.documentElement.classList.contains("dark")) {
-    themeToggle.textContent = "☀️";
-    localStorage.setItem("theme", "dark");
-  } else {
-    themeToggle.textContent = "🌙";
-    localStorage.setItem("theme", "light");
-  }
-});
+  
   </script>
 </body>
 </html>
